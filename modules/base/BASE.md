@@ -1,6 +1,6 @@
 # Base Modules Documentation
 
-Base modules provide essential system-level configuration that's shared across all hosts (apps, infra, obs, dev).
+Base modules provide essential system-level configuration that's shared across all hosts (apps, infra, obs, dev, template).
 
 ## Overview
 
@@ -34,7 +34,7 @@ All base modules are imported by each role and applied to their respective hosts
 - Enabling a global swap configuration (otherwise do it per-host)
 - Enabling/disabling core services
 
-**Note:** All hosts share this, so changes affect all four (apps, infra, obs, dev)
+**Note:** All hosts share this, so changes affect all (apps, infra, obs, dev, template)
 
 ---
 
@@ -53,7 +53,7 @@ All base modules are imported by each role and applied to their respective hosts
 - Adding new bash aliases
 - Adjusting curl or git defaults
 
-**Note:** All hosts share this, so changes affect all four (apps, infra, obs, dev)
+**Note:** All hosts share this, so changes affect all (apps, infra, obs, dev, template)
 
 ---
 

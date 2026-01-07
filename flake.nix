@@ -25,5 +25,9 @@
         system = "x86_64-linux";
         modules = [ ./hosts/dev/configuration.nix ];
       };
+      nixosConfigurations.template = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [ ./hosts/template/configuration.nix ];
+      };
     };
 }

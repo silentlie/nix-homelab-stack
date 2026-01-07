@@ -3,7 +3,7 @@
 Base NixOS configs plus Docker Compose stacks for apps, infra, and observability.
 
 ## Layout
-- `flake.nix` – NixOS entries for `apps`, `infra`, `obs`
+- `flake.nix` – NixOS entries for `apps`, `infra`, `obs`, `dev`, `template`
 - `hosts/` – per-host entrypoints (imports hardware + role)
 - `roles/` – `prod.nix` (base) and `dev.nix` (base + dev tools)
 - `modules/base/` – system, locale, users, ssh, network, docker, docs (`BASE.md`)
@@ -15,7 +15,7 @@ Base NixOS configs plus Docker Compose stacks for apps, infra, and observability
 2) Fill `docker-compose/*/.env` from `.env.example`.
 3) Deploy NixOS:
 	```bash
-	nixos-rebuild switch --flake .#apps   # or infra / obs
+	nixos-rebuild switch --flake .#apps   # or infra / obs / dev / template
 	```
 4) Start compose stacks on each host:
 	```bash
