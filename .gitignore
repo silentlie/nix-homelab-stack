@@ -1,0 +1,38 @@
+# Nix build artifacts
+result
+result*
+*.drv
+*.out
+.nfs*
+
+# Direnv
+.envrc
+.direnv/
+
+# Environment files (secrets)
+.env
+.env.*
+**/.env
+**/.env.*
+
+# But keep example files
+!.env.example
+!**/.env.example
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Docker volumes/backups
+*_backup/
+backup/
+
+# Generated images/archives
+*.tar
+*.tar.gz
+*.tgz
+
+# macOS cruft
+.DS_Store

@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for Nextcloud and Immich
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
+      POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - homelab
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis cache for Immich
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - homelab
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nextcloud application
+  nextcloud:
+    image: nextcloud:27-apache
+    container_name: nextcloud
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER:-admin}
+      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD:?error}
+      NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_DOMAIN:-localhost}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: nextcloud
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
+    volumes:
+      - nextcloud_data:/var/www/html
+      - nextcloud_config:/var/www/html/config
+    ports:
+      - "${NEXTCLOUD_PORT:-8080}:80"
+    networks:
+      - homelab
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/status.php"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Immich application
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:latest
+    container_name: immich-server
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_HOSTNAME: postgres
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?error}
+      DB_NAME: immich
+      REDIS_HOSTNAME: redis
+      REDIS_PORT: 6379
+    volumes:
+      - immich_upload:/usr/src/app/upload
+      - immich_library:/usr/src/app/library
+    ports:
+      - "${IMMICH_PORT:-3001}:3001"
+    networks:
+      - homelab
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/server/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Immich microservices
+  immich-microservices:
+    image: ghcr.io/immich-app/immich-server:latest
+    container_name: immich-microservices
+    command: start.sh microservices
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_HOSTNAME: postgres
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?error}
+      DB_NAME: immich
+      REDIS_HOSTNAME: redis
+      REDIS_PORT: 6379
+    volumes:
+      - immich_upload:/usr/src/app/upload
+      - immich_library:/usr/src/app/library
+    networks:
+      - homelab
+    restart: unless-stopped
+
+networks:
+  homelab:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  nextcloud_data:
+  nextcloud_config:
+  immich_upload:
+  immich_library:
