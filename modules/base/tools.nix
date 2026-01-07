@@ -10,7 +10,7 @@
     tree
     dnsutils
     lsof
-    ss
+    iproute2 # includes ss command
     nmap
   ];
 
