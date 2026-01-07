@@ -26,12 +26,12 @@ All base modules are imported by each role and applied to their respective hosts
 - Flakes experimental features (`nix-command`, `flakes`)
 - Automatic Nix garbage collection (weekly, deletes 30+ day old packages)
 - NTP time synchronization via Chrony
-- Swap configuration (4GB swapfile at `/swapfile`)
+- No swap configured at base; prefer per-host `swapDevices` in hardware config
 - Imports `tools.nix` for packages and configuration
 
 **When to modify:**
 - Changing NixOS version (stateVersion)
-- Adjusting swap size per host
+- Enabling a global swap configuration (otherwise do it per-host)
 - Enabling/disabling core services
 
 **Note:** All hosts share this, so changes affect all four (apps, infra, obs, dev)
@@ -222,6 +222,24 @@ Example (`roles/prod.nix`):
 
 **Note:** Service applications (Nextcloud, Immich, Prometheus, Grafana, etc.) are deployed using Docker Compose, not as NixOS modules. Base modules provide the foundation (Docker daemon, networking, users), and services run in containers managed by docker-compose.
 
+### Hardware Configuration Conventions
+
+Each host includes a generated `hardware-configuration.nix` that we keep aligned with these conventions:
+
+- Root and boot mounts reference disks by-partlabel:
+  - `/` → `/dev/disk/by-partlabel/root`
+  - `/boot` → `/dev/disk/by-partlabel/boot`
+- Boot filesystem options use `fmask=0022, dmask=0022`.
+- Swap is disabled by default: `swapDevices = [ ];`
+
+If you need swap on a specific host, set it in that host's hardware file, for example:
+
+```nix
+swapDevices = [
+  { device = "/swapfile"; size = 4096; }
+];
+```
+
 ### NixOS Module Merging
 
 NixOS automatically merges configuration from multiple modules:
@@ -295,7 +313,7 @@ To customize all hosts in a role, edit `roles/ROLE.nix`:
 To change something for **all hosts**, modify base modules:
 - Change timezone → edit `modules/base/locale.nix`
 - Add packages → edit `modules/base/system.nix`
-- Change swap size → edit `modules/base/system.nix`
+- Enable swap globally → edit `modules/base/system.nix` (otherwise set per-host in `hosts/*/hardware-configuration.nix`)
 
 ---
 
@@ -415,6 +433,7 @@ This NixOS configuration provides the **base infrastructure** (system, Docker, n
 - May need reboot after configuration change
 
 ### Swap not created
+- Swap is disabled by default in this setup. If you enabled it per-host, then:
 - Check: `swapon --show`
 - Verify filesystem has space: `df -h`
 - Check logs: `journalctl -u systemd-makefs`

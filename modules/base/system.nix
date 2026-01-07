@@ -26,12 +26,4 @@
 
   # NTP time synchronization
   services.chrony.enable = true;
-
-  # Swap configuration
-  swapDevices = [
-    {
-      device = "/swapfile";
-      size = 4096;
-    }
-  ];
 }
