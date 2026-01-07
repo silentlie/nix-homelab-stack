@@ -1,0 +1,27 @@
+server:
+  http_listen_port: 3200
+  log_level: info
+
+distributor:
+  rate_limit_enabled: true
+  rate_limit: 20000
+
+ingester:
+  max_block_duration: 5m
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/traces
+    wal:
+      path: /var/tempo/wal
+
+metrics_generator:
+  registry:
+    external_labels:
+      cluster: homelab
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
