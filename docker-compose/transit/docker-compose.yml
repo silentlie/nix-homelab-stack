@@ -1,0 +1,38 @@
+services:
+  vault-transit:
+    image: hashicorp/vault:latest
+    container_name: vault-transit
+    command: vault server -config=/vault/config
+    volumes:
+      - ./vault/transit/file:/vault/file
+      - ./vault/transit/config:/vault/config:ro
+      - ./vault/transit/policies:/vault/policies:ro
+    networks:
+      - transit
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - IPC_LOCK
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD", "sh", "-c", "vault status -format=json >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  transit:
+    driver: bridge
+    external: true

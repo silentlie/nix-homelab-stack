@@ -15,9 +15,11 @@ result*
 **/.env
 **/.env.*
 
-# But keep example files
-!.env.example
-!**/.env.example
+# Vault
+**/vault/**/file
+**/vault/**/role_*
+**/vault/**/secret_*
+**/vault/**/certs
 
 # VS Code
 .vscode/

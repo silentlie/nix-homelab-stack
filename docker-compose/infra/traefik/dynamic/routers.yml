@@ -1,0 +1,59 @@
+http:
+  routers:
+    authentik:
+      rule: Host(`auth.silencelie.dev`)
+      entryPoints:
+        - websecure
+      tls: {}
+      middlewares:
+        - public-chain
+      service: authentik-svc
+
+    traefik-health:
+      rule: Host(`traefik.silencelie.dev`) && Path(`/ping`)
+      entryPoints:
+        - websecure
+      tls: {}
+      middlewares:
+        - obs-chain
+      service: ping@internal
+      priority: 200
+
+    traefik-dashboard:
+      rule: Host(`traefik.silencelie.dev`)
+      entryPoints:
+        - websecure
+      tls: {}
+      middlewares:
+        - auth-chain
+      service: api@internal
+      priority: 100
+
+    grafana-metrics:
+      rule: Host(`grafana.silencelie.dev`) && PathPrefix(`/metrics`)
+      entryPoints:
+        - websecure
+      tls: {}
+      middlewares:
+        - obs-chain
+      service: grafana-svc
+      priority: 200
+
+    grafana:
+      rule: Host(`grafana.silencelie.dev`)
+      entryPoints:
+        - websecure
+      tls: {}
+      middlewares:
+        - auth-chain
+      service: grafana-svc
+      priority: 100
+
+    technitium:
+      rule: Host(`technitium.silencelie.dev`)
+      entryPoints:
+        - websecure
+      tls: {}
+      middlewares:
+        - auth-chain
+      service: technitium-svc

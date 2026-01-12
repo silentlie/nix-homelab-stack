@@ -1,115 +1,228 @@
-version: '3.8'
-
 services:
   # Technitium DNS server
   technitium:
-    image: technitiumdns/dns-server:latest
+    image: technitium/dns-server:latest
     container_name: technitium
     ports:
-      - "${DNS_PORT:-53}:53/udp"
-      - "${DNS_PORT:-53}:53/tcp"
-      - "${TECHNITIUM_UI_PORT:-5380}:5380/tcp"
-    volumes:
-      - technitium_config:/etc/technitiumdns/config
+      - "53:53/udp"
+      - "53:53/tcp"
+      - "853:853/tcp"   # DoT
+      - "853:853/udp"   # DoQ
     networks:
       - homelab
+    volumes:
+      - ./technitium:/etc/dns
     restart: unless-stopped
-    environment:
-      ASPNETCORE_URLS: http://+:5380
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -q --spider http://localhost:5380/"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Traefik reverse proxy (external traffic)
+  # Traefik reverse proxy (internet traffic)
   traefik:
-    image: traefik:v2.10
+    image: traefik:latest
     container_name: traefik
     command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL:-admin@example.com}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
+      - "--configFile=/etc/traefik/traefik.yml"
     ports:
-      - "${TRAEFIK_HTTP_PORT:-80}:80"
-      - "${TRAEFIK_HTTPS_PORT:-443}:443"
-      - "${TRAEFIK_DASHBOARD_PORT:-8080}:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - traefik_acme:/
-      - traefik_config:/etc/traefik
+      - "192.168.1.20:80:80"
+      - "192.168.1.20:443:443"
     networks:
       - homelab
+    depends_on:
+      authentik:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - ./traefik/acme.json:/etc/traefik/acme.json
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Nginx reverse proxy (internal traffic)
+  # Nginx reverse proxy (LAN traffic)
   nginx:
     image: nginx:alpine
     container_name: nginx
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - nginx_config:/etc/nginx
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - ./vault/agent/certs:/etc/nginx/certs:ro
     ports:
-      - "${NGINX_PORT:-8081}:80"
+      - "192.168.1.21:80:80"
+      - "192.168.1.21:443:443"
+    networks:
+      - homelab
+    depends_on:
+      vault-agent:
+        condition: service_healthy
+      authentik:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Primary Vault
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault
+    command: vault server -config=/vault/config
+    depends_on:
+      vault-transit:
+        condition: service_healthy
+    volumes:
+      - ./vault/primary/file:/vault/file
+      - ./vault/primary/config:/vault/config:ro
+      - ./vault/primary/policies:/vault/policies:ro
+    networks:
+      - homelab
+      - transit
+      - agent
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - IPC_LOCK
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD", "sh", "-c", "vault status -format=json >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Vault Agent (per-host sidecar)
+  vault-agent:
+    image: hashicorp/vault:latest
+    container_name: vault-agent
+    command: vault agent -config=/vault/agent/agent.hcl
+    depends_on:
+      vault:
+        condition: service_healthy
+    volumes:
+      - ./vault/agent/agent.hcl:/vault/agent/agent.hcl:ro
+      - ./vault/agent:/vault/agent
+      - ./vault/agent/certs:/vault/certs
+    networks:
+      - agent
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "sh", "-c", "test -s /vault/agent/token"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Central PostgreSQL Database
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
+      POSTGRES_MULTIPLE_DATABASES: authentik,vaultwarden
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh:ro
     networks:
       - homelab
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  # HashiCorp Vault (secrets management)
-  vault:
-    image: vault:latest
-    container_name: vault
-    command: vault server -config=/vault/config/vault.json
-    environment:
-      VAULT_ADDR: http://127.0.0.1:8200
-      VAULT_API_ADDR: http://vault:8200
-      VAULT_SKIP_VERIFY: "true"
-    volumes:
-      - vault_data:/vault/file
-      - ./vault-config.json:/vault/config/vault.json:ro
-    ports:
-      - "${VAULT_PORT:-8200}:8200"
-    networks:
-      - homelab
-    restart: unless-stopped
-    cap_add:
-      - IPC_LOCK
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Authentik (authentication)
-  authentik-db:
-    image: postgres:15-alpine
-    container_name: authentik-db
-    environment:
-      POSTGRES_DB: authentik
-      POSTGRES_USER: ${AUTHENTIK_DB_USER:-authentik}
-      POSTGRES_PASSWORD: ${AUTHENTIK_DB_PASSWORD:?error}
-    volumes:
-      - authentik_db:/var/lib/postgresql/data
-    networks:
-      - homelab
-    restart: unless-stopped
-
-  authentik-server:
+  authentik:
     image: ghcr.io/goauthentik/server:latest
-    container_name: authentik-server
+    container_name: authentik
     command: server
     environment:
-      AUTHENTIK_REDIS__HOST: redis
-      AUTHENTIK_POSTGRESQL__HOST: authentik-db
-      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_DB_USER:-authentik}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD:?error}
+      AUTHENTIK_REDIS__HOST: redis.home.arpa
+      AUTHENTIK_POSTGRESQL__HOST: postgres
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER:-postgres}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD:?error}
       AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?error}
     ports:
-      - "${AUTHENTIK_PORT:-9000}:9000"
-      - "${AUTHENTIK_HTTPS_PORT:-9443}:9443"
+      - "9000:9000"
+      - "9443:9443"
     depends_on:
-      - authentik-db
+      - postgres
     volumes:
       - authentik_media:/media
     networks:
@@ -121,14 +234,16 @@ services:
     image: vaultwarden/server:latest
     container_name: vaultwarden
     environment:
-      DATABASE_URL: ${VAULTWARDEN_DB_URL:?error}
-      DOMAIN: ${VAULTWARDEN_DOMAIN:-https://vaultwarden.example.com}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?error}@postgres:5432/vaultwarden
+      DOMAIN: ${VAULTWARDEN_DOMAIN:-https://vaultwarden.home.arpa}
       SHOW_PASSWORD_HINT: "false"
       INVITATIONS_ORG_INVITE_EXPIRATION_HOURS: 24
     volumes:
       - vaultwarden_data:/data
     ports:
-      - "${VAULTWARDEN_PORT:-8000}:80"
+      - "8000:80"
+    depends_on:
+      - postgres
     networks:
       - homelab
     restart: unless-stopped
@@ -141,13 +256,13 @@ services:
 networks:
   homelab:
     driver: bridge
+  transit:
+    driver: bridge
+    external: true
+  agent:
+    driver: bridge
 
 volumes:
-  technitium_config:
-  traefik_acme:
-  traefik_config:
-  nginx_config:
-  vault_data:
-  authentik_db:
+  postgres_data:
   authentik_media:
   vaultwarden_data:

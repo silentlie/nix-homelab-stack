@@ -1,0 +1,15 @@
+http:
+  services:
+    authentik-svc:
+      loadBalancer:
+        servers:
+          - url: "http://authentik:9000"
+    grafana-svc:
+      loadBalancer:
+        servers:
+          - url: "http://grafana:3000"
+    technitium-svc:
+      loadBalancer:
+        servers:
+          - url: "http://technitium:5380"
+
