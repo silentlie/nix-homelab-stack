@@ -119,7 +119,7 @@ services:
     volumes:
       - ./vault/primary/file:/vault/file
       - ./vault/primary/config:/vault/config
-      - ./vault/primary/policies:/vault/policies:ro
+      - ./vault/primary/policies:/vault/policies
     networks:
       - homelab
       - transit
@@ -156,7 +156,7 @@ services:
       vault:
         condition: service_healthy
     volumes:
-      - ./vault/agent/agent.hcl:/vault/agent/agent.hcl:ro
+      - ./vault/agent/agent.hcl:/vault/agent/agent.hcl
       - ./vault/agent:/vault/agent
       - ./vault/agent/certs:/vault/certs
       - postgres_secrets:/vault/postgres

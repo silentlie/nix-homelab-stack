@@ -6,7 +6,7 @@ services:
     volumes:
       - ./vault/transit/file:/vault/file
       - ./vault/transit/config:/vault/config
-      - ./vault/transit/policies:/vault/policies:ro
+      - ./vault/transit/policies:/vault/policies
     networks:
       - transit
     restart: unless-stopped
