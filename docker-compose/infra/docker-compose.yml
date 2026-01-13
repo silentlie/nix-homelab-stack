@@ -118,8 +118,8 @@ services:
         condition: service_healthy
     volumes:
       - ./vault/primary/file:/vault/file
-      - ./vault/primary/config:/vault/config
-      - ./vault/primary/policies:/vault/policies
+      - ./vault/primary/config:/vault/config:ro
+      - ./vault/primary/policies:/vault/policies:ro
     networks:
       - homelab
       - transit
@@ -131,6 +131,9 @@ services:
       - ALL
     cap_add:
       - IPC_LOCK
+      - SETFCAP
+      - SETGID
+      - SETUID
     ulimits:
       memlock:
         soft: -1
@@ -156,7 +159,7 @@ services:
       vault:
         condition: service_healthy
     volumes:
-      - ./vault/agent/agent.hcl:/vault/agent/agent.hcl
+      - ./vault/agent/agent.hcl:/vault/agent/agent.hcl:ro
       - ./vault/agent:/vault/agent
       - ./vault/agent/certs:/vault/certs
       - postgres_secrets:/vault/postgres
@@ -167,6 +170,10 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    cap_add:
+      - SETFCAP
+      - SETGID
+      - SETUID
     healthcheck:
       test: ["CMD-SHELL", "test -s /vault/postgres/001-init.sql"]
       interval: 10s

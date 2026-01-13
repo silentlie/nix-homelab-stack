@@ -5,8 +5,8 @@ services:
     command: vault server -config=/vault/config
     volumes:
       - ./vault/transit/file:/vault/file
-      - ./vault/transit/config:/vault/config
-      - ./vault/transit/policies:/vault/policies
+      - ./vault/transit/config:/vault/config:ro
+      - ./vault/transit/policies:/vault/policies:ro
     networks:
       - transit
     restart: unless-stopped
@@ -16,6 +16,9 @@ services:
       - ALL
     cap_add:
       - IPC_LOCK
+      - SETFCAP
+      - SETGID
+      - SETUID
     ulimits:
       memlock:
         soft: -1
