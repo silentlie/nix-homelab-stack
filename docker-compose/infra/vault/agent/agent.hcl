@@ -68,3 +68,10 @@ template {
     max = "30s"
   }
 }
+
+template {
+  source      = "/vault/agent/templates/postgres-init.sql.tpl"
+  destination = "/vault/postgres/001-init.sql"
+  perms       = 0400
+  error_on_missing_key = true
+}
