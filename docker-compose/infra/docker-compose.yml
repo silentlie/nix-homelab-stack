@@ -67,7 +67,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Nginx reverse proxy (LAN traffic)
+  # Nginx reverse proxy (local traffic)
   nginx:
     image: nginx:alpine
     container_name: nginx
@@ -113,9 +113,6 @@ services:
     image: hashicorp/vault:latest
     container_name: vault
     command: vault server -config=/vault/config
-    depends_on:
-      vault-transit:
-        condition: service_healthy
     volumes:
       - ./vault/primary/file:/vault/file
       - ./vault/primary/config:/vault/config:ro
@@ -162,6 +159,8 @@ services:
       - ./vault/agent/agent.hcl:/vault/agent/agent.hcl:ro
       - ./vault/agent:/vault/agent
       - ./vault/agent/certs:/vault/certs
+      - ./vault/agent/authentik:/vault/authentik
+      - ./vault/agent/redis:/vault/redis
       - postgres_secrets:/vault/postgres
     networks:
       - agent
@@ -190,6 +189,8 @@ services:
   postgres:
     image: postgres:latest
     container_name: postgres
+    environment:
+      - POSTGRES_PASSWORD=postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_secrets:/docker-entrypoint-initdb.d:ro
@@ -214,48 +215,50 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Authentik (authentication)
-  authentik:
-    image: ghcr.io/goauthentik/server:latest
-    container_name: authentik
-    command: server
-    environment:
-      AUTHENTIK_REDIS__HOST: redis.home.arpa
-      AUTHENTIK_POSTGRESQL__HOST: postgres
-      AUTHENTIK_POSTGRESQL__NAME: authentik
-      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER:-postgres}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD:?error}
-      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?error}
-    ports:
-      - "9000:9000"
-      - "9443:9443"
+  redis:
+    image: redis:latest
+    container_name: redis
+    command: >
+      redis-server /redis.conf
     depends_on:
-      - postgres
-    volumes:
-      - authentik_media:/media
+      vault-agent:
+        condition: service_healthy
     networks:
       - homelab
+    volumes:
+      - redis_data:/data
+      - ./vault/agent/redis:/secrets:ro
+      - ./redis/redis.conf:/redis.conf:ro
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h 127.0.0.1 ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Vaultwarden (Bitwarden alternative)
-  vaultwarden:
-    image: vaultwarden/server:latest
-    container_name: vaultwarden
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?error}@postgres:5432/vaultwarden
-      DOMAIN: ${VAULTWARDEN_DOMAIN:-https://vaultwarden.home.arpa}
-      SHOW_PASSWORD_HINT: "false"
-      INVITATIONS_ORG_INVITE_EXPIRATION_HOURS: 24
-    volumes:
-      - vaultwarden_data:/data
-    ports:
-      - "8000:80"
+  # Authentik (authentication)
+  authentik:
+    image: authentik/server:2025.10.3
+    container_name: authentik
+    command: server
     depends_on:
-      - postgres
+      vault-agent:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./vault/agent/authentik/authentik.env
     networks:
       - homelab
     restart: unless-stopped
@@ -264,10 +267,74 @@ services:
     cap_drop:
       - ALL
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/alive"]
+      test: ["CMD", "sh", "-c", "wget -q --spider http://localhost:9000/-/health/ready/"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  authentik-worker:
+    image: authentik/server:2025.10.3
+    command: worker
+    env_file:
+      - ./vault/agent/authentik/authentik.env
+    depends_on:
+      authentik:
+        condition: service_healthy
+    networks:
+        - homelab
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -q --spider http://localhost:9000/-/health/ready/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Vaultwarden
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    volumes:
+      - vaultwarden_data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      vault-agent:
+        condition: service_healthy
+    env_file:
+      - ./vault/agent/vaultwarden/vaultwarden.env
+    networks:
+      - homelab
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -q --spider http://127.0.0.1:80/alive"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   homelab:
@@ -281,5 +348,5 @@ networks:
 volumes:
   postgres_data:
   postgres_secrets:
-  authentik_media:
+  redis_data:
   vaultwarden_data:

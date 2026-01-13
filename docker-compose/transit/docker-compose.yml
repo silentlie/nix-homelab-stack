@@ -2,6 +2,8 @@ services:
   vault-transit:
     image: hashicorp/vault:latest
     container_name: vault-transit
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
     command: vault server -config=/vault/config
     volumes:
       - ./vault/transit/file:/vault/file

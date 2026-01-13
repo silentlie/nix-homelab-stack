@@ -37,7 +37,7 @@ listener "tcp" {
 
 template {
   source      = "/vault/agent/templates/nginx-cert.tpl"
-  destination = "/vault/certs/fullchain.pem"
+  destination = "/vault/agent/certs/fullchain.pem"
   perms       = 0644
   error_on_missing_key = true
   wait {
@@ -48,7 +48,7 @@ template {
 
 template {
   source      = "/vault/agent/templates/nginx-key.tpl"
-  destination = "/vault/certs/privkey.pem"
+  destination = "/vault/agent/certs/privkey.pem"
   perms       = 0600
   error_on_missing_key = true
   command = "nginx -s reload"
@@ -60,7 +60,7 @@ template {
 
 template {
   source      = "/vault/agent/templates/ca.tpl"
-  destination = "/vault/certs/ca.crt"
+  destination = "/vault/agent/certs/ca.crt"
   perms       = 0644
   error_on_missing_key = true
   wait {
@@ -71,7 +71,28 @@ template {
 
 template {
   source      = "/vault/agent/templates/postgres-init.sql.tpl"
-  destination = "/vault/postgres/001-init.sql"
+  destination = "/vault/agent/postgres/001-init.sql"
   perms       = 0400
+  error_on_missing_key = true
+}
+
+template {
+  source      = "/vault/agent/templates/users.acl.tpl"
+  destination = "/vault/agent/redis/users.acl"
+  perms       = 0600
+  error_on_missing_key = true
+}
+
+template {
+  source      = "/vault/agent/templates/authentik.env.tpl"
+  destination = "/vault/agent/authentik/authentik.env"
+  perms       = 0600
+  error_on_missing_key = true
+}
+
+template {
+  source      = "/vault/agent/templates/vaultwarden.env.tpl"
+  destination = "/vault/agent/vaultwarden/vaultwarden.env"
+  perms       = 0600
   error_on_missing_key = true
 }

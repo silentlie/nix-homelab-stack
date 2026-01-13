@@ -9,3 +9,7 @@ path "transit/decrypt/autounseal-key" {
 path "transit/keys/autounseal-key" {
   capabilities = ["read"]
 }
+
+path "sys/health" {
+  capabilities = ["read"]
+}
