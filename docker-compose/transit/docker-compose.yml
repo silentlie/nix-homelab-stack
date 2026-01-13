@@ -5,7 +5,7 @@ services:
     command: vault server -config=/vault/config
     volumes:
       - ./vault/transit/file:/vault/file
-      - ./vault/transit/config:/vault/config:ro
+      - ./vault/transit/config:/vault/config
       - ./vault/transit/policies:/vault/policies:ro
     networks:
       - transit
@@ -16,7 +16,6 @@ services:
       - ALL
     cap_add:
       - IPC_LOCK
-      - CHOWN
     ulimits:
       memlock:
         soft: -1

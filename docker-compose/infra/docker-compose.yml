@@ -118,7 +118,7 @@ services:
         condition: service_healthy
     volumes:
       - ./vault/primary/file:/vault/file
-      - ./vault/primary/config:/vault/config:ro
+      - ./vault/primary/config:/vault/config
       - ./vault/primary/policies:/vault/policies:ro
     networks:
       - homelab
@@ -131,7 +131,6 @@ services:
       - ALL
     cap_add:
       - IPC_LOCK
-      - CHOWN
     ulimits:
       memlock:
         soft: -1
@@ -168,8 +167,6 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - CHOWN
     healthcheck:
       test: ["CMD-SHELL", "test -s /vault/postgres/001-init.sql"]
       interval: 10s
@@ -199,8 +196,6 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - CHOWN
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres"]
       interval: 10s
@@ -261,8 +256,6 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - CHOWN
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/alive"]
       interval: 10s
