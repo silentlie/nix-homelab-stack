@@ -174,6 +174,8 @@ services:
     cap_drop:
       - ALL
     cap_add:
+      - IPC_LOCK
+      - CHOWN
       - SETFCAP
       - SETGID
       - SETUID
