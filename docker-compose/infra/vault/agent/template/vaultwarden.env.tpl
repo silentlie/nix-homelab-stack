@@ -1,10 +1,10 @@
-{{- with secret "kv/data/vaultwarden" -}}
+{{- with secret "database/postgres/vaultwarden" -}}
+DATABASE_URL=host=postgres port=5432 user={{ .Data.username }} password={{ .Data.password }} dbname=vaultwarden sslmode=disable
+{{- end }}
 
-DATABASE_URL={{ .Data.data.database_url }}
-ADMIN_TOKEN={{ .Data.data.admin_token }}
+{{- with secret "kv/data/vaultwarden/env" -}}
 DOMAIN={{ .Data.data.domain }}
 SIGNUPS_ALLOWED={{ .Data.data.signups_allowed }}
-ROCKET_PORT={{ .Data.data.rocket_port }}
-ROCKET_WORKERS={{ .Data.data.rocket_workers }}
-
+INVITATIONS_ALLOWED={{ .Data.data.invitation_allowed }}
+SENDS_ALLOWED={{ .Data.data.sends_allowed }}
 {{- end -}}

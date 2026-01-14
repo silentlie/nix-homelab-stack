@@ -59,8 +59,15 @@ template {
 
 template {
   source      = "/vault/agent/templates/postgres-init.sql.tpl"
-  destination = "/vault/agent/postgres/001-init.sql"
+  destination = "/vault/agent/postgres/docker-entrypoint-initdb.d/001-init.sql"
   perms       = 0400
+  error_on_missing_key = true
+}
+
+template {
+  source      = "/vault/agent/templates/postgres.env.tpl"
+  destination = "/vault/agent/postgres/postgres.env"
+  perms       = 0600
   error_on_missing_key = true
 }
 

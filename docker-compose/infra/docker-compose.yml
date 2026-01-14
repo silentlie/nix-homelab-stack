@@ -160,7 +160,8 @@ services:
       - ./vault/agent/agent.hcl:/vault/agent/agent.hcl:ro
       - ./vault/agent/templates:/vault/agent/templates:ro
       - ./vault/agent:/vault/agent
-      - postgres_secrets:/vault/agent/postgres
+      - postgres_secrets:/vault/agent/postgres/docker-entrypoint-initdb.d
+      - redis_secrets:/vault/agent/redis
     networks:
       - agent
     restart: unless-stopped
@@ -188,16 +189,16 @@ services:
   postgres:
     image: postgres:latest
     container_name: postgres
-    environment:
-      - POSTGRES_PASSWORD=postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_secrets:/docker-entrypoint-initdb.d:ro
     networks:
-      - homelab
+      - db
     depends_on:
       vault-agent:
         condition: service_healthy
+    env_file:
+      - ./vault/agent/postgres/postgres.env
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -214,35 +215,33 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  redis:
-    image: redis:latest
-    container_name: redis
-    command: >
-      redis-server /redis.conf
-    depends_on:
-      vault-agent:
-        condition: service_healthy
-    networks:
-      - homelab
-    volumes:
-      - redis_data:/data
-      - ./vault/agent/redis:/secrets:ro
-      - ./redis/redis.conf:/redis.conf:ro
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli -h 127.0.0.1 ping | grep -q PONG"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # redis:
+  #   image: redis:latest
+  #   container_name: redis
+  #   command: >
+  #     redis-server /redis.conf
+  #   depends_on:
+  #     vault-agent:
+  #       condition: service_healthy
+  #   volumes:
+  #     - redis_data:/data
+  #     - redis_secrets:/secrets:ro
+  #     - ./redis/redis.conf:/redis.conf:ro
+  #   restart: unless-stopped
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   cap_drop:
+  #     - ALL
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "redis-cli -h 127.0.0.1 ping | grep -q PONG"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 10
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
 
   # Authentik (authentication)
   authentik:
@@ -254,12 +253,11 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     env_file:
       - ./vault/agent/authentik/authentik.env
     networks:
       - homelab
+      - db
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -286,7 +284,7 @@ services:
       authentik:
         condition: service_healthy
     networks:
-        - homelab
+        - db
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -319,6 +317,7 @@ services:
       - ./vault/agent/vaultwarden/vaultwarden.env
     networks:
       - homelab
+      - db
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -343,9 +342,12 @@ networks:
     external: true
   agent:
     driver: bridge
+  db:
+    driver: bridge
 
 volumes:
   postgres_data:
   postgres_secrets:
-  redis_data:
+  # redis_data:
+  # redis_secrets:
   vaultwarden_data:

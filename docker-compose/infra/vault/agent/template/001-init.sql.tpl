@@ -1,18 +1,26 @@
-{{- with secret "kv/data/db/postgres-bootstrap" }}
+{{- with secret "kv/data/postgres/users/vault" -}}
 
-ALTER ROLE postgres WITH PASSWORD '{{ .Data.data.postgres_password }}';
-
-DO $$
+DO
+$$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_roles WHERE rolname = 'vault_db_admin'
-  ) THEN
-    CREATE ROLE vault_db_admin
-      WITH LOGIN PASSWORD '{{ .Data.data.vault_admin_password }}';
+  -- Create role if it doesn't exist
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '{{ .Data.data.username }}') THEN
+    CREATE ROLE "{{ .Data.data.username }}"
+      WITH
+        LOGIN
+        PASSWORD '{{ .Data.data.password }}'
+        CREATEDB
+        CREATEROLE;
+  ELSE
+    -- Ensure password and privileges are as expected
+    ALTER ROLE "{{ .Data.data.username }}"
+      WITH
+        LOGIN
+        PASSWORD '{{ .Data.data.password }}'
+        CREATEDB
+        CREATEROLE;
   END IF;
-END $$;
-
-ALTER ROLE vault_db_admin CREATEROLE;
-ALTER ROLE vault_db_admin CREATEDB;
+END
+$$;
 
 {{- end }}
