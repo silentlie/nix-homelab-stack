@@ -161,7 +161,7 @@ services:
       - ./vault/agent/templates:/vault/agent/templates:ro
       - ./vault/agent:/vault/agent
       - postgres_secrets:/vault/agent/postgres/docker-entrypoint-initdb.d
-      - redis_secrets:/vault/agent/redis
+      # - redis_secrets:/vault/agent/redis
     networks:
       - agent
     restart: unless-stopped

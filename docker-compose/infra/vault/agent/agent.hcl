@@ -71,12 +71,12 @@ template {
   error_on_missing_key = true
 }
 
-template {
-  source      = "/vault/agent/templates/users.acl.tpl"
-  destination = "/vault/agent/redis/users.acl"
-  perms       = 0600
-  error_on_missing_key = true
-}
+# template {
+#   source      = "/vault/agent/templates/users.acl.tpl"
+#   destination = "/vault/agent/redis/users.acl"
+#   perms       = 0600
+#   error_on_missing_key = true
+# }
 
 template {
   source      = "/vault/agent/templates/authentik.env.tpl"
