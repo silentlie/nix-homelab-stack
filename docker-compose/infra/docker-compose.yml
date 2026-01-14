@@ -113,6 +113,8 @@ services:
     image: hashicorp/vault:latest
     container_name: vault
     command: vault server -config=/vault/config
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
     volumes:
       - ./vault/primary/file:/vault/file
       - ./vault/primary/config:/vault/config:ro
@@ -153,6 +155,8 @@ services:
     image: hashicorp/vault:latest
     container_name: vault-agent
     command: vault agent -config=/vault/agent/agent.hcl
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
     depends_on:
       vault:
         condition: service_healthy
