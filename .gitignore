@@ -16,6 +16,7 @@ result*
 **/.env.*
 
 # Vault
+**/vault/**/seal-transit
 **/vault/**/file
 **/vault/**/role_*
 **/vault/**/secret_*

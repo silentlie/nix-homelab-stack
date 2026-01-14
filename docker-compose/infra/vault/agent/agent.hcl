@@ -13,6 +13,7 @@ auto_auth {
     config = {
       role_id_file_path   = "/vault/agent/role_id"
       secret_id_file_path = "/vault/agent/secret_id"
+      remove_secret_id_file_after_reading = false
     }
   }
 
@@ -36,22 +37,9 @@ listener "tcp" {
 }
 
 template {
-  source      = "/vault/agent/templates/nginx-cert.tpl"
-  destination = "/vault/agent/certs/fullchain.pem"
-  perms       = 0644
+  source      = "/vault/agent/templates/vault.tpl"
+  destination = ""
   error_on_missing_key = true
-  wait {
-    min = "5s"
-    max = "30s"
-  }
-}
-
-template {
-  source      = "/vault/agent/templates/nginx-key.tpl"
-  destination = "/vault/agent/certs/privkey.pem"
-  perms       = 0600
-  error_on_missing_key = true
-  command = "nginx -s reload"
   wait {
     min = "5s"
     max = "30s"

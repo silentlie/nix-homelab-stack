@@ -128,6 +128,7 @@ services:
       - ALL
     cap_add:
       - IPC_LOCK
+      - CHOWN
       - SETFCAP
       - SETGID
       - SETUID
@@ -157,11 +158,9 @@ services:
         condition: service_healthy
     volumes:
       - ./vault/agent/agent.hcl:/vault/agent/agent.hcl:ro
+      - ./vault/agent/templates:/vault/agent/templates:ro
       - ./vault/agent:/vault/agent
-      - ./vault/agent/certs:/vault/certs
-      - ./vault/agent/authentik:/vault/authentik
-      - ./vault/agent/redis:/vault/redis
-      - postgres_secrets:/vault/postgres
+      - postgres_secrets:/vault/agent/postgres
     networks:
       - agent
     restart: unless-stopped
@@ -174,7 +173,7 @@ services:
       - SETGID
       - SETUID
     healthcheck:
-      test: ["CMD-SHELL", "test -s /vault/postgres/001-init.sql"]
+      test: ["CMD-SHELL", "test -s /vault/agent/postgres/001-init.sql"]
       interval: 10s
       timeout: 5s
       retries: 5

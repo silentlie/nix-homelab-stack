@@ -18,6 +18,7 @@ services:
       - ALL
     cap_add:
       - IPC_LOCK
+      - CHOWN
       - SETFCAP
       - SETGID
       - SETUID
