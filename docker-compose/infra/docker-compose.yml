@@ -348,6 +348,7 @@ networks:
     external: true
   agent:
     driver: bridge
+    internal: true
   db:
     driver: bridge
 

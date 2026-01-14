@@ -3,8 +3,7 @@ log_level = "info"
 log_format = "json"
 
 vault {
-  address = "https://vault.home.arpa:8200"
-  ca_cert = "/vault/certs/ca.crt"
+  address = "http://vault:8200"
 }
 
 auto_auth {

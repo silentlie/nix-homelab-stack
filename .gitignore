@@ -20,8 +20,8 @@ result*
 **/vault/**/file
 **/agent/**
 !**/agent.hcl
-!**/agent/template
-!**/agent/template/**
+!**/agent/templates
+!**/agent/templates/**
 
 # VS Code
 .vscode/
