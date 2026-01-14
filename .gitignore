@@ -18,9 +18,10 @@ result*
 # Vault
 **/vault/**/seal-transit.hcl
 **/vault/**/file
-**/vault/**/role_*
-**/vault/**/secret_*
-**/vault/**/certs
+/docker-compose/infra/vault/agent/**
+!/docker-compose/infra/vault/agent/agent.hcl
+!/docker-compose/infra/vault/agent/template/
+!/docker-compose/infra/vault/agent/template/**
 
 # VS Code
 .vscode/
