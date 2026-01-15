@@ -161,11 +161,11 @@ services:
       vault:
         condition: service_healthy
     volumes:
-      - ./vault/agent/agent.hcl:/vault/file/agent/agent.hcl:ro
-      - ./vault/agent/templates:/vault/file/agent/templates:ro
-      - ./vault/agent:/vault/file/agent
-      - postgres_secrets:/vault/file/agent/postgres
-      # - redis_secrets:/vault/file/agent/redis
+      - ./vault/agent/agent.hcl:/vault/agent/agent.hcl:ro
+      - ./vault/agent/templates:/vault/agent/templates:ro
+      - ./vault/agent:/vault/agent
+      - postgres_secrets:/vault/agent/postgres
+      # - redis_secrets:/vault/agent/redis
     networks:
       - agent
     restart: unless-stopped
@@ -180,7 +180,7 @@ services:
       - SETGID
       - SETUID
     healthcheck:
-      test: ["CMD-SHELL", "test -s /vault/file/agent/postgres/001-init.sql"]
+      test: ["CMD-SHELL", "test -s /vault/agent/postgres/001-init.sql"]
       interval: 10s
       timeout: 5s
       retries: 5

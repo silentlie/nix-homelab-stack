@@ -10,15 +10,15 @@ auto_auth {
   method "approle" {
     mount_path = "auth/approle"
     config = {
-      role_id_file_path   = "/vault/file/agent/role_id"
-      secret_id_file_path = "/vault/file/agent/secret_id"
+      role_id_file_path   = "/vault/agent/role_id"
+      secret_id_file_path = "/vault/agent/secret_id"
       remove_secret_id_file_after_reading = false
     }
   }
 
   sink "file" {
     config = {
-      path = "/vault/file/agent/token"
+      path = "/vault/agent/token"
       mode = 0600
     }
   }
@@ -36,8 +36,8 @@ listener "tcp" {
 }
 
 template {
-  source      = "/vault/file/agent/templates/nginx/vault.tpl"
-  destination = "/vault/file/agent/certs"
+  source      = "/vault/agent/templates/nginx/vault.tpl"
+  destination = "/vault/agent/certs"
   error_on_missing_key = true
   wait {
     min = "5s"
@@ -46,8 +46,8 @@ template {
 }
 
 template {
-  source      = "/vault/file/agent/templates/ca.tpl"
-  destination = "/vault/file/agent/certs/ca.crt"
+  source      = "/vault/agent/templates/ca.tpl"
+  destination = "/vault/agent/certs/ca.crt"
   perms       = 0644
   error_on_missing_key = true
   wait {
@@ -57,36 +57,36 @@ template {
 }
 
 template {
-  source      = "/vault/file/agent/templates/001-init.sql.tpl"
-  destination = "/vault/file/agent/postgres/001-init.sql"
+  source      = "/vault/agent/templates/001-init.sql.tpl"
+  destination = "/vault/agent/postgres/001-init.sql"
   perms       = 0400
   error_on_missing_key = true
 }
 
 template {
-  source      = "/vault/file/agent/templates/postgres.env.tpl"
-  destination = "/vault/file/agent/postgres/postgres.env"
+  source      = "/vault/agent/templates/postgres.env.tpl"
+  destination = "/vault/agent/postgres/postgres.env"
   perms       = 0600
   error_on_missing_key = true
 }
 
 # template {
-#   source      = "/vault/file/agent/templates/users.acl.tpl"
-#   destination = "/vault/file/agent/redis/users.acl"
+#   source      = "/vault/agent/templates/users.acl.tpl"
+#   destination = "/vault/agent/redis/users.acl"
 #   perms       = 0600
 #   error_on_missing_key = true
 # }
 
 template {
-  source      = "/vault/file/agent/templates/authentik.env.tpl"
-  destination = "/vault/file/agent/authentik/authentik.env"
+  source      = "/vault/agent/templates/authentik.env.tpl"
+  destination = "/vault/agent/authentik/authentik.env"
   perms       = 0600
   error_on_missing_key = true
 }
 
 template {
-  source      = "/vault/file/agent/templates/vaultwarden.env.tpl"
-  destination = "/vault/file/agent/vaultwarden/vaultwarden.env"
+  source      = "/vault/agent/templates/vaultwarden.env.tpl"
+  destination = "/vault/agent/vaultwarden/vaultwarden.env"
   perms       = 0600
   error_on_missing_key = true
 }
