@@ -18,7 +18,7 @@ auto_auth {
 
   sink "file" {
     config = {
-      path = "/vault/agent/token"
+      path = "/vault/file/token"
       mode = 0600
     }
   }
@@ -37,7 +37,7 @@ listener "tcp" {
 
 template {
   source      = "/vault/agent/templates/nginx/vault.tpl"
-  destination = "/vault/agent/certs"
+  destination = "/vault/file/certs"
   error_on_missing_key = true
   wait {
     min = "5s"
@@ -47,7 +47,7 @@ template {
 
 template {
   source      = "/vault/agent/templates/ca.tpl"
-  destination = "/vault/agent/certs/ca.crt"
+  destination = "/vault/file/certs/ca.crt"
   perms       = 0644
   error_on_missing_key = true
   wait {
@@ -58,35 +58,35 @@ template {
 
 template {
   source      = "/vault/agent/templates/001-init.sql.tpl"
-  destination = "/vault/agent/postgres/001-init.sql"
+  destination = "/vault/file/postgres/001-init.sql"
   perms       = 0400
   error_on_missing_key = true
 }
 
 template {
   source      = "/vault/agent/templates/postgres.env.tpl"
-  destination = "/vault/agent/postgres/postgres.env"
+  destination = "/vault/file/postgres/postgres.env"
   perms       = 0600
   error_on_missing_key = true
 }
 
 # template {
 #   source      = "/vault/agent/templates/users.acl.tpl"
-#   destination = "/vault/agent/redis/users.acl"
+#   destination = "/vault/file/redis/users.acl"
 #   perms       = 0600
 #   error_on_missing_key = true
 # }
 
 template {
   source      = "/vault/agent/templates/authentik.env.tpl"
-  destination = "/vault/agent/authentik/authentik.env"
+  destination = "/vault/file/authentik/authentik.env"
   perms       = 0600
   error_on_missing_key = true
 }
 
 template {
   source      = "/vault/agent/templates/vaultwarden.env.tpl"
-  destination = "/vault/agent/vaultwarden/vaultwarden.env"
+  destination = "/vault/file/vaultwarden/vaultwarden.env"
   perms       = 0600
   error_on_missing_key = true
 }

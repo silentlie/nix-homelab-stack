@@ -155,17 +155,16 @@ services:
     image: hashicorp/vault:latest
     container_name: vault-agent
     command: vault agent -config=/vault/agent/agent.hcl
-    environment:
-      VAULT_ADDR: http://127.0.0.1:8200
     depends_on:
       vault:
         condition: service_healthy
     volumes:
       - ./vault/agent/agent.hcl:/vault/agent/agent.hcl:ro
       - ./vault/agent/templates:/vault/agent/templates:ro
-      - ./vault/agent:/vault/agent
-      - postgres_secrets:/vault/agent/postgres
-      # - redis_secrets:/vault/agent/redis
+      - ./vault/agent/role_id:/vault/agent/role_id:ro
+      - ./vault/agent/secret_id:/vault/agent/secret_id:ro
+      - ./vault/agent/file:/vault/file
+      # - redis_secrets:/vault/file/redis
     networks:
       - agent
     restart: unless-stopped
@@ -180,7 +179,7 @@ services:
       - SETGID
       - SETUID
     healthcheck:
-      test: ["CMD-SHELL", "test -s /vault/agent/postgres/001-init.sql"]
+      test: ["CMD-SHELL", "test -s /vault/file/postgres/001-init.sql"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -197,14 +196,14 @@ services:
     container_name: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - postgres_secrets:/docker-entrypoint-initdb.d:ro
+      - ./vault/agent/file/postgres:/docker-entrypoint-initdb.d:ro
     networks:
       - db
     depends_on:
       vault-agent:
         condition: service_healthy
     env_file:
-      - ./vault/agent/postgres/postgres.env
+      - ./vault/agent/file/postgres/postgres.env
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -260,7 +259,7 @@ services:
       postgres:
         condition: service_healthy
     env_file:
-      - ./vault/agent/authentik/authentik.env
+      - ./vault/agent/file/authentik/authentik.env
     networks:
       - homelab
       - db
@@ -285,7 +284,7 @@ services:
     image: authentik/server:2025.10.3
     command: worker
     env_file:
-      - ./vault/agent/authentik/authentik.env
+      - ./vault/agent/file/authentik/authentik.env
     depends_on:
       authentik:
         condition: service_healthy
@@ -320,7 +319,7 @@ services:
       vault-agent:
         condition: service_healthy
     env_file:
-      - ./vault/agent/vaultwarden/vaultwarden.env
+      - ./vault/agent/file/vaultwarden/vaultwarden.env
     networks:
       - homelab
       - db
@@ -355,7 +354,6 @@ networks:
 
 volumes:
   postgres_data:
-  postgres_secrets:
   # redis_data:
   # redis_secrets:
   vaultwarden_data:
