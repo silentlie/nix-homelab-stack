@@ -10,8 +10,8 @@ auto_auth {
   method "approle" {
     mount_path = "auth/approle"
     config = {
-      role_id_file_path   = "/vault/agent/file/approle/role_id"
-      secret_id_file_path = "/vault/agent/file/approle/secret_id"
+      role_id_file_path   = "/vault/file/approle/role_id"
+      secret_id_file_path = "/vault/file/approle/secret_id"
       remove_secret_id_file_after_reading = true
     }
   }
