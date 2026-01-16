@@ -20,6 +20,7 @@ result*
 **/vault/**/file
 **/agent/**
 !**/agent.hcl
+!**/agent/README.md
 !**/agent/templates
 !**/agent/templates/**
 

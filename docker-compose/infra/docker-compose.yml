@@ -74,7 +74,7 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/snippets:/etc/nginx/snippets:ro
-      - ./vault/agent/certs:/etc/nginx/certs:ro
+      - ./vault/agent/file/certs:/etc/nginx/certs:ro
     ports:
       - "192.168.1.21:80:80"
       - "192.168.1.21:443:443"
