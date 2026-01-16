@@ -15,7 +15,7 @@
     jq
     yq
     tmux
-    7zip
+    p7zip 
     unzip
     # Nix tools
     nixfmt # Nix code formatter
