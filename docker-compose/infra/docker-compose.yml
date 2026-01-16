@@ -120,7 +120,7 @@ services:
       - ./vault/primary/config:/vault/config:ro
       - ./vault/primary/policies:/vault/policies:ro
     ports:
-      - "127.0.0.1:80:80"
+      - "127.0.0.1:8200:8200"
     networks:
       - homelab
       - transit
