@@ -33,17 +33,13 @@
 
   # Development and debugging tools
   environment.systemPackages = with pkgs; [
-    git
     vim
-    curl
-    htop
-    nixos-rebuild
     colmena
     nixos-anywhere
 
     # Docker
-    docker
-    docker-compose
+    #docker
+    #docker-compose
 
     # Enhanced command-line tools
     ripgrep # Fast grep (rg)
@@ -61,10 +57,5 @@
     shellcheck # Shell linter
     shfmt # Shell formatter
     zsh # Z shell
-
-    # Dev utilities
-    jq
-    yq
-    tmux
   ];
 }

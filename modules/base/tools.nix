@@ -12,6 +12,14 @@
     lsof
     iproute2 # includes ss command
     nmap
+    jq
+    yq
+    tmux
+    7zip
+    unzip
+    # Nix tools
+    nixfmt # Nix code formatter
+    nil # Nix language server
   ];
 
   # Bash aliases
