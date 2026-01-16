@@ -59,34 +59,34 @@ template {
 template {
   source      = "/vault/agent/templates/001-init.sql.tpl"
   destination = "/vault/file/postgres/001-init.sql"
-  perms       = 0400
+  perms       = 0644
   error_on_missing_key = true
 }
 
 template {
   source      = "/vault/agent/templates/postgres.env.tpl"
   destination = "/vault/file/postgres/postgres.env"
-  perms       = 0600
+  perms       = 0644
   error_on_missing_key = true
 }
 
 # template {
 #   source      = "/vault/agent/templates/users.acl.tpl"
 #   destination = "/vault/file/redis/users.acl"
-#   perms       = 0600
+#   perms       = 0644
 #   error_on_missing_key = true
 # }
 
 template {
   source      = "/vault/agent/templates/authentik.env.tpl"
   destination = "/vault/file/authentik/authentik.env"
-  perms       = 0600
+  perms       = 0644
   error_on_missing_key = true
 }
 
 template {
   source      = "/vault/agent/templates/vaultwarden.env.tpl"
   destination = "/vault/file/vaultwarden/vaultwarden.env"
-  perms       = 0600
+  perms       = 0644
   error_on_missing_key = true
 }
