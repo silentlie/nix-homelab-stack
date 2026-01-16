@@ -10,8 +10,8 @@ auto_auth {
   method "approle" {
     mount_path = "auth/approle"
     config = {
-      role_id_file_path   = "/vault/agent/role_id"
-      secret_id_file_path = "/vault/agent/secret_id"
+      role_id_file_path   = "/vault/agent/file/approle/role_id"
+      secret_id_file_path = "/vault/agent/file/approle/secret_id"
       remove_secret_id_file_after_reading = true
     }
   }
@@ -37,7 +37,7 @@ listener "tcp" {
 
 template {
   source      = "/vault/agent/templates/nginx/vault.tpl"
-  destination = "/vault/file/certs"
+  destination = "/vault/file/certs/vault.pem"
   error_on_missing_key = true
   wait {
     min = "5s"

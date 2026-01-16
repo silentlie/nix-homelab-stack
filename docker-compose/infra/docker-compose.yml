@@ -163,8 +163,6 @@ services:
     volumes:
       - ./vault/agent/agent.hcl:/vault/agent/agent.hcl:ro
       - ./vault/agent/templates:/vault/agent/templates:ro
-      - ./vault/agent/role_id:/vault/agent/role_id:ro
-      - ./vault/agent/secret_id:/vault/agent/secret_id
       - ./vault/agent/file:/vault/file
       # - redis_secrets:/vault/file/redis
     networks:
