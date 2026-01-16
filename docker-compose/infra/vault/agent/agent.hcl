@@ -47,7 +47,7 @@ template {
 
 template {
   source      = "/vault/agent/templates/nginx/technitium.tpl"
-  destination = ""
+  destination = "/vault/file/certs/technitium.pem"
   error_on_missing_key = true
   wait {
     min = "5s"
