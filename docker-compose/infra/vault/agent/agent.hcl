@@ -77,16 +77,16 @@ template {
 #   error_on_missing_key = true
 # }
 
-template {
-  source      = "/vault/agent/templates/authentik.env.tpl"
-  destination = "/vault/file/authentik/authentik.env"
-  perms       = 0644
-  error_on_missing_key = true
-}
+# template {
+#   source      = "/vault/agent/templates/authentik.env.tpl"
+#   destination = "/vault/file/authentik/authentik.env"
+#   perms       = 0644
+#   error_on_missing_key = true
+# }
 
-template {
-  source      = "/vault/agent/templates/vaultwarden.env.tpl"
-  destination = "/vault/file/vaultwarden/vaultwarden.env"
-  perms       = 0644
-  error_on_missing_key = true
-}
+# template {
+#   source      = "/vault/agent/templates/vaultwarden.env.tpl"
+#   destination = "/vault/file/vaultwarden/vaultwarden.env"
+#   perms       = 0644
+#   error_on_missing_key = true
+# }

@@ -4,7 +4,7 @@ AUTHENTIK_PROXY=true
 
 {{- with secret "kv/data/authentik/users/bootstrap" -}}
 AUTHENTIK_BOOTSTRAP_PASSWORD={{ .Data.data.password }}
-{{- if hasKey .Data.data "token" }}
+{{- with index .Data.data "token" }}
 AUTHENTIK_BOOTSTRAP_TOKEN={{ index .Data.data "token" }}
 {{- end }}
 {{- end }}
