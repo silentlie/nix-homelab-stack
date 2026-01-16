@@ -3,7 +3,7 @@ AUTHENTIK_SECRET_KEY={{ with secret "kv/data/authentik/core" }}{{ .Data.data.sec
 AUTHENTIK_PROXY=true
 
 AUTHENTIK_BOOTSTRAP_PASSWORD={{ with secret "kv/data/authentik/users/bootstrap" }}{{ .Data.data.password }}{{ end }}
-AUTHENTIK_BOOTSTRAP_TOKEN={{- if hasKey .Data.data "token" -}}{{ .Data.data.token }}{{- end }}
+#AUTHENTIK_BOOTSTRAP_TOKEN={{ with secret "kv/data/authentik/users/bootstrap" }}{{ .Data.data.token }}{{- end }}
 
 AUTHENTIK_LOG_LEVEL=info
 AUTHENTIK_ERROR_REPORTING_ENABLED=false

@@ -119,6 +119,8 @@ services:
       - ./vault/primary/file:/vault/file
       - ./vault/primary/config:/vault/config:ro
       - ./vault/primary/policies:/vault/policies:ro
+    ports:
+      - "127.0.0.1:80:80"
     networks:
       - homelab
       - transit
