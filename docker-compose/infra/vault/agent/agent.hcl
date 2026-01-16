@@ -46,6 +46,16 @@ template {
 }
 
 template {
+  source      = "/vault/agent/templates/nginx/technitium.tpl"
+  destination = ""
+  error_on_missing_key = true
+  wait {
+    min = "5s"
+    max = "30s"
+  }
+}
+
+template {
   source      = "/vault/agent/templates/ca.tpl"
   destination = "/vault/file/certs/ca.crt"
   perms       = 0644
