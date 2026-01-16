@@ -83,8 +83,8 @@ services:
     depends_on:
       vault-agent:
         condition: service_healthy
-      authentik:
-        condition: service_healthy
+      # authentik:
+      #   condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "nginx", "-t"]

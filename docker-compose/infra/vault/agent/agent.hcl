@@ -37,7 +37,7 @@ listener "tcp" {
 
 template {
   source      = "/vault/agent/templates/nginx/vault.tpl"
-  destination = "/vault/file/certs/vault.pem"
+  destination = "/vault/file/certs/.vault.rendered"
   error_on_missing_key = true
   wait {
     min = "5s"
@@ -47,7 +47,7 @@ template {
 
 template {
   source      = "/vault/agent/templates/nginx/technitium.tpl"
-  destination = "/vault/file/certs/technitium.pem"
+  destination = "/vault/file/certs/.technitium.rendered"
   error_on_missing_key = true
   wait {
     min = "5s"
