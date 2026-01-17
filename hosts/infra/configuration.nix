@@ -15,6 +15,8 @@
     { address = "192.168.1.21"; prefixLength = 24; }
   ];
 
+  networking.interfaces.ens18.useDHCP = false;
+
   networking.firewall = {
     interfaces.ens18.allowedTCPPorts = [ 80 443 53 ];
     interfaces.ens19.allowedTCPPorts = [ 80 443 53 ];
