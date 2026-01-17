@@ -108,7 +108,8 @@ openssl pkcs12 -export \
   -out /vault/file/certs/dns.p12 \
   -inkey /vault/file/certs/dns.key \
   -in /vault/file/certs/dns.crt \
-  -certfile /vault/file/certs/ca-chain.crt
+  -certfile /vault/file/certs/ca-chain.crt \
+  -passout pass:
 EOH
 }
 

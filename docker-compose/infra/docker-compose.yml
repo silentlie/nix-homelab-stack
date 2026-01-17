@@ -10,6 +10,9 @@ services:
       - "853:853/udp"   # DoQ
     networks:
       - homelab
+    depends_on:
+      vault-agent-openssl:
+        condition: service_healthy
     volumes:
       - ./technitium:/etc/dns
       - ./vault/agent/file/certs/dns.p12:/etc/dns/dns.p12:ro
@@ -184,6 +187,49 @@ services:
       - SETUID
     healthcheck:
       test: ["CMD-SHELL", "test -s /vault/file/postgres/001-init.sql"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  vault-agent-openssl:
+    image: alpine:latest
+    container_name: vault-agent-openssl
+    command: >
+      sh -c "
+        apk add --no-cache openssl &&
+        while true; do
+          if [ -s /certs/dns.key ] &&
+            [ -s /certs/dns.crt ] &&
+            [ -s /certs/ca-chain.crt ] &&
+            { [ ! -f /certs/dns.p12 ] || [ /certs/dns.crt -nt /certs/dns.p12 ]; }; then
+            openssl pkcs12 -export \
+              -out /certs/dns.p12 \
+              -inkey /certs/dns.key \
+              -in /certs/dns.crt \
+              -certfile /certs/ca-chain.crt \
+              -passout pass:;
+          fi
+          sleep 10;
+        done
+      "
+    depends_on:
+      vault-agent:
+        condition: service_healthy
+    volumes:
+      - ./vault/agent/file/certs:/certs
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /certs/dns.p12"]
       interval: 10s
       timeout: 5s
       retries: 5
