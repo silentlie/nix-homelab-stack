@@ -96,7 +96,7 @@ template {
 }
 
 template {
-  source      = "/vault/agent/templates/dns.tpl"
+  source      = "/vault/agent/templates/nginx/dns.tpl"
   destination = "/vault/file/certs/.dns.rendered"
   error_on_missing_key = true
   wait {
