@@ -15,11 +15,12 @@
     jq
     yq
     tmux
-    p7zip 
+    p7zip
     unzip
     # Nix tools
     nixfmt # Nix code formatter
     nil # Nix language server
+    tcpdump
   ];
 
   # Bash aliases
