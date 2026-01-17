@@ -21,6 +21,7 @@
     nixfmt # Nix code formatter
     nil # Nix language server
     tcpdump
+    openssl
   ];
 
   # Bash aliases
