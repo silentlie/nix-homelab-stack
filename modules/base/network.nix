@@ -7,8 +7,8 @@
     allowedTCPPorts = [ 22 ];
   };
 
-  dhcp.enable = true;
-  dhcp.dns = true;
+  networking.dhcp.enable = true;
+  networking.dns.enable = true;
 
   networking.defaultGateway = "192.168.1.1";
   networking.search = [
