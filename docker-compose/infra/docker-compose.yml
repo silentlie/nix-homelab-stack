@@ -12,6 +12,7 @@ services:
       - homelab
     volumes:
       - ./technitium:/etc/dns
+      - ./vault/agent/file/certs/dns.p12:/etc/dns/dns.p12:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "sh", "-c", "wget -q --spider http://localhost:5380/"]

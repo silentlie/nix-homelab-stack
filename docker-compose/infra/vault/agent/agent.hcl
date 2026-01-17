@@ -96,13 +96,20 @@ template {
 }
 
 template {
-  source      = "/vault/agent/templates/nginx/dns.tpl"
+  source      = "/vault/agent/templates/dns.tpl"
   destination = "/vault/file/certs/.dns.rendered"
   error_on_missing_key = true
   wait {
     min = "5s"
     max = "30s"
   }
+  command = <<EOH
+openssl pkcs12 -export \
+  -out /vault/file/certs/dns.p12 \
+  -inkey /vault/file/certs/dns.key \
+  -in /vault/file/certs/dns.crt \
+  -certfile /vault/file/certs/ca-chain.crt
+EOH
 }
 
 template {
