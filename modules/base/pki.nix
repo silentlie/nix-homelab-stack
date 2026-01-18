@@ -2,6 +2,6 @@
 
 {
   security.pki.certificates= [
-    ../../ca/root-ca.crt
+    (builtins.readFile "/etc/nixos/ca/root-ca.cer")
   ];
 }

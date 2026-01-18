@@ -205,7 +205,7 @@ services:
         echo 'Removing old dns.pfx...';
         rm -f /technitium/dns.pfx;
         echo 'Generating dns.pfx...';
-        openssl pkcs12 -export -out /technitium/dns.pfx -inkey /certs/dns.key -in /certs/dns.crt -certfile /certs/ca-chain.crt -passout pass:;
+        openssl pkcs12 -export -out /technitium/dns.pfx -inkey /certs/dns.key -in /certs/dns-crt.pem -certfile /certs/ca-chain.pem -passout pass:;
         echo 'Generated dns.pfx at /technitium/dns.pfx';
         tail -f /dev/null;
       "

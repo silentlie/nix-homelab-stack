@@ -6,6 +6,8 @@
 
 {{- .Data.Key  | writeToFile "/vault/file/certs/dns.key" "" "" "0644" -}}
 {{- .Data.Cert | writeToFile "/vault/file/certs/dns.crt" "" "" "0644" -}}
-{{- .Data.CA   | writeToFile "/vault/file/certs/ca-chain.crt" "" "" "0644" -}}
+{{- .Data.CA   | writeToFile "/vault/file/certs/dns.crt" "" "" "0644" "append,newline" -}}
+{{- .Data.Cert | writeToFile "/vault/file/certs/dns-crt.pem" "" "" "0644" -}}
+{{- .Data.CA   | writeToFile "/vault/file/certs/ca-chain.pem" "" "" "0644" -}}
 
 {{- end -}}
