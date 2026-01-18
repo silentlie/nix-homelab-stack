@@ -201,14 +201,9 @@ services:
     container_name: vault-agent-openssl
     command: >
       sh -c "
-        apk add --no-cache bash openssl cron;
+        apk add --no-cache bash openssl dcron;
         echo 'Setting up cron job to run every hour...';
-        echo '0 * * * * /bin/sh -c \"
-          echo Removing old dns.pfx... &&
-          rm -f /technitium/dns.pfx &&
-          echo Generating dns.pfx... &&
-          openssl pkcs12 -export -out /technitium/dns.pfx -inkey /certs/dns.key -in /certs/dns-crt.pem -certfile /certs/ca-chain.pem -passout pass: &&
-          echo Generated dns.pfx at /technitium/dns.pfx\"' > /etc/crontabs/root;
+        echo '0 * * * * /bin/sh -c \"echo Removing old dns.pfx... && rm -f /technitium/dns.pfx && echo Generating dns.pfx... && openssl pkcs12 -export -out /technitium/dns.pfx -inkey /certs/dns.key -in /certs/dns-crt.pem -certfile /certs/ca-chain.pem -passout pass: && echo Generated dns.pfx at /technitium/dns.pfx\"' > /etc/crontabs/root;
         echo 'Starting cron service...';
         crond -f;
       "
