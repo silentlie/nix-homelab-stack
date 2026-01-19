@@ -116,6 +116,16 @@ template {
 }
 
 template {
+  source      = "/vault/agent/templates/nginx/nanokvm.tpl"
+  destination = "/vault/file/certs/.nanokvm.rendered"
+  error_on_missing_key = true
+  wait {
+    min = "5s"
+    max = "30s"
+  }
+}
+
+template {
   source      = "/vault/agent/templates/nginx/dns.tpl"
   destination = "/vault/file/certs/.dns.rendered"
   error_on_missing_key = true
