@@ -1,4 +1,4 @@
-{{- with secret "database/static-role/vaultwarden" -}}
+{{- with secret "database/static-roles/vaultwarden" -}}
 DATABASE_URL=host=postgres port=5432 user={{ .Data.username }} password={{ .Data.password }} dbname=vaultwarden sslmode=disable
 {{- end }}
 
