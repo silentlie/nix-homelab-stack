@@ -15,6 +15,10 @@ $$;
 
 GRANT CONNECT ON DATABASE vaultwarden TO vaultwarden_base;
 
+{{- with secret "kv/data/postgres/users/vault" -}}
+GRANT authentik_base  TO "{{ .Data.data.username }}" WITH ADMIN OPTION;
+{{- end }}
+
 \connect vaultwarden
 
 GRANT USAGE ON SCHEMA public TO vaultwarden_base;

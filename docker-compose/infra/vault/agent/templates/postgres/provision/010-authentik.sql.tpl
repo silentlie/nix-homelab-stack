@@ -15,6 +15,10 @@ $$;
 
 GRANT CONNECT ON DATABASE authentik TO authentik_base;
 
+{{- with secret "kv/data/postgres/users/vault" -}}
+GRANT authentik_base  TO "{{ .Data.data.username }}" WITH ADMIN OPTION;
+{{- end }}
+
 \connect authentik
 
 GRANT USAGE ON SCHEMA public TO authentik_base;
