@@ -19,7 +19,8 @@ result*
 **/vault/**/seal-transit.hcl
 **/vault/**/file
 **/agent/**
-!**/agent.hcl
+!**/agent/config
+!**/agent/config/**
 !**/agent/README.md
 !**/agent/templates
 !**/agent/templates/**

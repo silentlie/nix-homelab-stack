@@ -9,18 +9,18 @@ BEGIN
       WITH
         LOGIN
         PASSWORD '{{ .Data.data.password }}'
-        CREATEDB
         CREATEROLE;
   ELSE
-    -- Ensure password and privileges are as expected
+    -- Privileges are as expected
     ALTER ROLE "{{ .Data.data.username }}"
       WITH
         LOGIN
         PASSWORD '{{ .Data.data.password }}'
-        CREATEDB
         CREATEROLE;
   END IF;
 END
 $$;
 
 {{- end }}
+
+ALTER ROLE postgres PASSWORD NULL;

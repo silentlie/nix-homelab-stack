@@ -131,6 +131,7 @@ services:
       - homelab
       - transit
       - agent
+      - db
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -162,12 +163,19 @@ services:
   vault-agent:
     image: hashicorp/vault:latest
     container_name: vault-agent
-    command: vault agent -config=/vault/agent/agent.hcl
+    command:
+      - vault
+      - agent
+      - -config=/vault/agent/config/agent.hcl
+      - -config=/vault/agent/config/nginx.hcl
+      - -config=/vault/agent/config/postgres.hcl
+      - -config=/vault/agent/config/authentik.hcl
+      - -config=/vault/agent/config/vaultwarden.hcl
     depends_on:
       vault:
         condition: service_healthy
     volumes:
-      - ./vault/agent/agent.hcl:/vault/agent/agent.hcl:ro
+      - ./vault/agent/config:/vault/agent/config:ro
       - ./vault/agent/templates:/vault/agent/templates:ro
       - ./vault/agent/file:/vault/file
       # - redis_secrets:/vault/file/redis
@@ -235,7 +243,7 @@ services:
     image: postgres:latest
     container_name: postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       - ./vault/agent/file/postgres:/docker-entrypoint-initdb.d:ro
     networks:
       - db
@@ -247,13 +255,61 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    cap_drop:
-      - ALL
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres-provision:
+    image: postgres:alpine
+    container_name: postgres-provision
+    depends_on:
+      postgres:
+        condition: service_healthy
+      vault-agent:
+        condition: service_healthy
+    networks:
+      - db
+    volumes:
+      - ./vault/agent/file/postgres/provision:/provision:ro
+    entrypoint: ["/bin/sh", "-lc"]
+    command: >
+      set -euo pipefail;
+
+      echo "Waiting for provision_user/provision_pass...";
+      until [ -s /provision/provision_user ] && [ -s /provision/provision_pass ]; do
+        sleep 1;
+      done;
+      export PGHOST=postgres;
+      export PGPORT=5432;
+      export PGUSER="$(cat /provision/provision_user)";
+      export PGPASSWORD="$(cat /provision/provision_pass)";
+
+      echo "Starting PostgreSQL provisioning…";
+
+      for f in $(ls -1 /provision/*.sql 2>/dev/null | sort); do
+        echo "Running $f";
+        psql -v ON_ERROR_STOP=1 -d postgres -f "$f";
+      done;
+
+      echo "PostgreSQL provisioning completed successfully."
+      touch /state/ready;
+
+      echo "Entering idle state";
+      tail -f /dev/null
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /state/ready"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
+      start_period: 0s
     logging:
       driver: json-file
       options:
@@ -294,10 +350,10 @@ services:
     container_name: authentik
     command: server
     depends_on:
-      vault-agent:
+      postgres-provision:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
+    volumes:
+      - ./vault/agent/file/authentik:/authentik/secrets:ro
     env_file:
       - ./vault/agent/file/authentik/authentik.env
     networks:
@@ -326,7 +382,7 @@ services:
     env_file:
       - ./vault/agent/file/authentik/authentik.env
     depends_on:
-      authentik:
+      postgres-provision:
         condition: service_healthy
     networks:
         - db
@@ -354,9 +410,7 @@ services:
     volumes:
       - vaultwarden_data:/data
     depends_on:
-      postgres:
-        condition: service_healthy
-      vault-agent:
+      postgres-provision:
         condition: service_healthy
     env_file:
       - ./vault/agent/file/vaultwarden/vaultwarden.env
