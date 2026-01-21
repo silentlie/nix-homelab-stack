@@ -278,34 +278,35 @@ services:
       - db
     volumes:
       - ./vault/agent/file/postgres/provision:/provision:ro
-    entrypoint: ["/bin/sh", "-lc"]
     command: >
-      set -euo pipefail;
+      sh -c '
+        set -eu;
 
-      echo "Waiting for provision_user/provision_pass...";
-      until [ -s /provision/provision_user ] && [ -s /provision/provision_pass ]; do
-        sleep 1;
-      done;
-      export PGHOST=postgres;
-      export PGPORT=5432;
-      export PGUSER="$(cat /provision/provision_user)";
-      export PGPASSWORD="$(cat /provision/provision_pass)";
+        echo "Waiting for provision_user/provision_pass...";
+        until [ -s /provision/provision_user ] && [ -s /provision/provision_pass ]; do
+          sleep 1;
+        done;
+        export PGHOST=postgres;
+        export PGPORT=5432;
+        export PGUSER="$(cat /provision/provision_user)";
+        export PGPASSWORD="$(cat /provision/provision_pass)";
 
-      echo "Starting PostgreSQL provisioning…";
+        echo "Starting PostgreSQL provisioning…";
 
-      for f in $$(ls -1 /postgres/provision/*.sql 2>/dev/null | sort); do
-        echo "Running $$f";
-        psql -v ON_ERROR_STOP=1 -d postgres -f "$$f";
-      done;
+        for f in $$(ls -1 /provision/*.sql 2>/dev/null | sort); do
+          echo "Running $$f";
+          psql -v ON_ERROR_STOP=1 -d postgres -f "$$f";
+        done;
 
-      echo "PostgreSQL provisioning completed successfully."
-      touch /state/ready;
+        echo "PostgreSQL provisioning completed successfully."
+        touch /ready;
 
-      echo "Entering idle state";
-      tail -f /dev/null
+        echo "Entering idle state";
+        tail -f /dev/null
+      '
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "test -f /state/ready"]
+      test: ["CMD-SHELL", "test -f /ready"]
       interval: 5s
       timeout: 2s
       retries: 3
