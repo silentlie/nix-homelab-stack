@@ -293,9 +293,9 @@ services:
 
       echo "Starting PostgreSQL provisioning…";
 
-      for f in $(ls -1 /provision/*.sql 2>/dev/null | sort); do
-        echo "Running $f";
-        psql -v ON_ERROR_STOP=1 -d postgres -f "$f";
+      for f in $$(ls -1 /postgres/provision/*.sql 2>/dev/null | sort); do
+        echo "Running $$f";
+        psql -v ON_ERROR_STOP=1 -d postgres -f "$$f";
       done;
 
       echo "PostgreSQL provisioning completed successfully."
