@@ -1,4 +1,4 @@
-{{- with secret "database/creds/vaultwarden" -}}
+{{- with secret "database/static-creds/vaultwarden" -}}
 DATABASE_URL=host=postgres port=5432 user={{ .Data.username }} password={{ .Data.password }} dbname=vaultwarden sslmode=disable
 {{- end }}
 
