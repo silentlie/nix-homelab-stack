@@ -193,7 +193,7 @@ services:
       - SETGID
       - SETUID
     healthcheck:
-      test: ["CMD-SHELL", "test -s /vault/file/postgres/999-vault.sql"]
+      test: ["CMD-SHELL", "test -s /vault/file/postgres/999-postgres.sql"]
       interval: 10s
       timeout: 5s
       retries: 5
