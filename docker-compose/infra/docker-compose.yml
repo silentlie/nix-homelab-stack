@@ -213,13 +213,13 @@ services:
         apk add --no-cache openssl inotify-tools;
         debounce_s=2;
         while inotifywait -qq -e close_write,move,create,delete,attrib -r /certs; do
-          sleep "${debounce_s}";
+          sleep "$${debounce_s}";
           if [ -s /certs/dns.key ] && [ -s /certs/dns-crt.pem ] && [ -s /certs/ca-chain.pem ]; then
-            echo "Generating dns.pfx at $(date -Iseconds)";
+            echo "Generating dns.pfx at $$(date -Iseconds)";
             tmp="/technitium/dns.pfx.tmp";
-            rm -f $tmp;
-            openssl pkcs12 -export -out $tmp -inkey /certs/dns.key -in /certs/dns-crt.pem -certfile /certs/ca-chain.pem -passout pass:;
-            mv $tmp /technitium/dns.pfx;
+            rm -f "$$tmp";
+            openssl pkcs12 -export -out "$$tmp" -inkey /certs/dns.key -in /certs/dns-crt.pem -certfile /certs/ca-chain.pem -passout pass:;
+            mv "$$tmp" /technitium/dns.pfx;
             echo "Generated /technitium/dns.pfx";
           fi
         done
@@ -255,14 +255,14 @@ services:
         set -eu;
         apk add --no-cache inotify-tools docker-cli;
         debounce_s=2;
-        echo "Watching /certs for changes; will HUP nginx (debounce ${debounce_s}s)";
+        echo "Watching /certs for changes; will HUP nginx (debounce $${debounce_s}s)";
         while inotifywait -qq -e close_write,move,create,delete,attrib -r /certs; do
-          sleep "${debounce_s}";
+          sleep "$${debounce_s}";
           if docker exec nginx nginx -t >/dev/null 2>&1; then
             docker kill -s HUP nginx;
-            echo "Reloaded nginx (HUP) at $(date -Iseconds)";
+            echo "Reloaded nginx (HUP) at $$(date -Iseconds)";
           else
-            echo "nginx -t failed; NOT reloading at $(date -Iseconds)" >&2;
+            echo "nginx -t failed; NOT reloading at $$(date -Iseconds)" >&2;
           fi
         done
       '
