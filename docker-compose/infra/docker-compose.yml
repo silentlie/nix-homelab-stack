@@ -211,8 +211,8 @@ services:
       sh -c '
         set -eu;
         apk add --no-cache openssl inotify-tools;
-        debounce_s=2;
-        while inotifywait -qq -e close_write,move,create,delete,attrib -r /certs; do
+        debounce_s=60;
+        while inotifywait -qq -e close_write,move,create,delete,attrib /certs/dns.key /certs/dns-crt.pem /certs/ca-chain.pem; do
           sleep "$${debounce_s}";
           if [ -s /certs/dns.key ] && [ -s /certs/dns-crt.pem ] && [ -s /certs/ca-chain.pem ]; then
             echo "Generating dns.pfx at $$(date -Iseconds)";
@@ -254,8 +254,8 @@ services:
       sh -lc '
         set -eu;
         apk add --no-cache inotify-tools docker-cli;
-        debounce_s=2;
-        echo "Watching /certs for changes; will HUP nginx (debounce $${debounce_s}s)";
+        debounce_s=60;
+        echo "Watching cert files for changes; will HUP nginx (debounce $${debounce_s}s)";
         while inotifywait -qq -e close_write,move,create,delete,attrib -r /certs; do
           sleep "$${debounce_s}";
           if docker exec nginx nginx -t >/dev/null 2>&1; then

@@ -22,5 +22,3 @@ END
 $$;
 
 {{- end }}
-
-ALTER ROLE postgres PASSWORD NULL;
