@@ -193,7 +193,7 @@ services:
       - SETGID
       - SETUID
     healthcheck:
-      test: ["CMD-SHELL", "test -s /vault/file/postgres/001-init.sql"]
+      test: ["CMD-SHELL", "test -s /vault/file/postgres/999-vault.sql"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -208,20 +208,29 @@ services:
     image: alpine:latest
     container_name: vault-agent-openssl
     command: >
-      sh -c "
-        apk add --no-cache bash openssl dcron;
-        echo 'Setting up cron job to run every hour...';
-        echo '0 * * * * /bin/sh -c \"echo Removing old dns.pfx... && rm -f /technitium/dns.pfx && echo Generating dns.pfx... && openssl pkcs12 -export -out /technitium/dns.pfx -inkey /certs/dns.key -in /certs/dns-crt.pem -certfile /certs/ca-chain.pem -passout pass: && echo Generated dns.pfx at /technitium/dns.pfx\" >> /var/log/cron.log 2>&1' > /etc/crontabs/root;
-        echo 'Starting cron service...';
-        crond -f;
-      "
+      sh -c '
+        set -eu;
+        apk add --no-cache openssl inotify-tools;
+        debounce_s=2;
+        while inotifywait -qq -e close_write,move,create,delete,attrib -r /certs; do
+          sleep "${debounce_s}";
+          if [ -s /certs/dns.key ] && [ -s /certs/dns-crt.pem ] && [ -s /certs/ca-chain.pem ]; then
+            echo "Generating dns.pfx at $(date -Iseconds)";
+            tmp="/technitium/dns.pfx.tmp";
+            rm -f $tmp;
+            openssl pkcs12 -export -out $tmp -inkey /certs/dns.key -in /certs/dns-crt.pem -certfile /certs/ca-chain.pem -passout pass:;
+            mv $tmp /technitium/dns.pfx;
+            echo "Generated /technitium/dns.pfx";
+          fi
+        done
+      '
     depends_on:
       vault-agent:
         condition: service_healthy
     volumes:
       - ./vault/agent/file/certs:/certs
       - ./technitium:/technitium
-    restart: no
+    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -232,6 +241,42 @@ services:
       timeout: 5s
       retries: 5
       start_period: 0s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nginx-reloader:
+    image: alpine:latest
+    container_name: nginx-reloader
+    command: >
+      sh -lc '
+        set -eu;
+        apk add --no-cache inotify-tools docker-cli;
+        debounce_s=2;
+        echo "Watching /certs for changes; will HUP nginx (debounce ${debounce_s}s)";
+        while inotifywait -qq -e close_write,move,create,delete,attrib -r /certs; do
+          sleep "${debounce_s}";
+          if docker exec nginx nginx -t >/dev/null 2>&1; then
+            docker kill -s HUP nginx;
+            echo "Reloaded nginx (HUP) at $(date -Iseconds)";
+          else
+            echo "nginx -t failed; NOT reloading at $(date -Iseconds)" >&2;
+          fi
+        done
+      '
+    depends_on:
+      vault-agent:
+        condition: service_healthy
+    volumes:
+      - ./vault/agent/file/certs:/certs:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     logging:
       driver: json-file
       options:
@@ -260,57 +305,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  postgres-provision:
-    image: postgres:alpine
-    container_name: postgres-provision
-    depends_on:
-      postgres:
-        condition: service_healthy
-      vault-agent:
-        condition: service_healthy
-    networks:
-      - db
-    volumes:
-      - ./vault/agent/file/postgres/provision:/provision:ro
-    command: >
-      sh -c '
-        set -eu;
-
-        echo "Waiting for provision_user/provision_pass...";
-        until [ -s /provision/provision_user ] && [ -s /provision/provision_pass ]; do
-          sleep 1;
-        done;
-        export PGHOST=postgres;
-        export PGPORT=5432;
-        export PGUSER="$(cat /provision/provision_user)";
-        export PGPASSWORD="$(cat /provision/provision_pass)";
-
-        echo "Starting PostgreSQL provisioning…";
-
-        for f in $$(ls -1 /provision/*.sql 2>/dev/null | sort); do
-          echo "Running $$f";
-          psql -v ON_ERROR_STOP=1 -d postgres -f "$$f";
-        done;
-
-        echo "PostgreSQL provisioning completed successfully."
-        touch /ready;
-
-        echo "Entering idle state";
-        tail -f /dev/null
-      '
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "test -f /ready"]
-      interval: 5s
-      timeout: 2s
-      retries: 3
-      start_period: 0s
     logging:
       driver: json-file
       options:
@@ -351,7 +345,9 @@ services:
     container_name: authentik
     command: server
     depends_on:
-      postgres-provision:
+      vault-agent:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     volumes:
       - ./vault/agent/file/authentik:/authentik/secrets:ro
@@ -383,7 +379,7 @@ services:
     env_file:
       - ./vault/agent/file/authentik/authentik.env
     depends_on:
-      postgres-provision:
+      authentik:
         condition: service_healthy
     networks:
         - db
@@ -411,7 +407,9 @@ services:
     volumes:
       - vaultwarden_data:/data
     depends_on:
-      postgres-provision:
+      vault-agent:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     env_file:
       - ./vault/agent/file/vaultwarden/vaultwarden.env
