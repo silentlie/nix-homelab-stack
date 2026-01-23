@@ -17,7 +17,11 @@ services:
       - ./technitium:/etc/dns
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "sh", "-c", "wget -q --spider http://localhost:5380/"]
+      test:
+        [
+          "CMD-SHELL",
+          "dig +time=1 +tries=1 @127.0.0.1 localhost A | grep -q 'status: NOERROR' || exit 1"
+        ]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -125,8 +129,8 @@ services:
       - ./vault/primary/file:/vault/file
       - ./vault/primary/config:/vault/config:ro
       - ./vault/primary/policies:/vault/policies:ro
-    ports:
-      - "127.0.0.1:8200:8200"
+    # ports:
+    #   - "127.0.0.1:8200:8200"
     networks:
       - homelab
       - transit
