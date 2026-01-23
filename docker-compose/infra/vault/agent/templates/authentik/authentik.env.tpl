@@ -11,7 +11,6 @@ AUTHENTIK_SECRET_KEY={{ with secret "kv/data/authentik/core" }}{{ .Data.data.sec
 
 AUTHENTIK_PROXY=true
 
-
 AUTHENTIK_LOG_LEVEL=info
 AUTHENTIK_ERROR_REPORTING_ENABLED=false
 

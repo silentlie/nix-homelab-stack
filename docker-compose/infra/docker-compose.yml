@@ -390,6 +390,7 @@ services:
       - ./vault/agent/file/authentik:/authentik/secrets:ro
     networks:
         - db
+        - homelab
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
