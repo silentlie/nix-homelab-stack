@@ -380,11 +380,14 @@ services:
   authentik-worker:
     image: authentik/server:2025.10.3
     command: worker
+    container_name: authentik-worker
     env_file:
       - ./vault/agent/file/authentik/authentik.env
     depends_on:
       authentik:
         condition: service_healthy
+    volumes:
+      - ./vault/agent/file/authentik:/authentik/secrets:ro
     networks:
         - db
     restart: unless-stopped
