@@ -15,7 +15,7 @@ WHERE NOT EXISTS (
 
 GRANT vaultwarden TO vault WITH ADMIN OPTION;
 
-GRANT CONNECT ON DATABASE vaultwarden TO vaultwarden;
+ALTER DATABASE vaultwarden OWNER TO vaultwarden;
 
 \connect vaultwarden
 

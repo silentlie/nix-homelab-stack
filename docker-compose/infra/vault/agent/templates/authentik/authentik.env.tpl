@@ -1,3 +1,4 @@
+
 AUTHENTIK_SECRET_KEY={{ with secret "kv/data/authentik/core" }}{{ .Data.data.secret_key }}{{ end }}
 
 AUTHENTIK_PROXY=true

@@ -15,7 +15,7 @@ WHERE NOT EXISTS (
 
 GRANT authentik TO vault WITH ADMIN OPTION;
 
-GRANT CONNECT ON DATABASE authentik TO authentik;
+ALTER DATABASE authentik OWNER TO authentik;
 
 \connect authentik
 

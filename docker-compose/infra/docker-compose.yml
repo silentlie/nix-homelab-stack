@@ -366,7 +366,7 @@ services:
     cap_drop:
       - ALL
     healthcheck:
-      test: ["CMD", "sh", "-c", "wget -q --spider http://localhost:9000/-/health/ready/"]
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/-/health/ready/"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -393,7 +393,7 @@ services:
     cap_drop:
       - ALL
     healthcheck:
-      test: ["CMD", "sh", "-c", "wget -q --spider http://localhost:9000/-/health/ready/"]
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/-/health/ready/"]
       interval: 10s
       timeout: 5s
       retries: 5
