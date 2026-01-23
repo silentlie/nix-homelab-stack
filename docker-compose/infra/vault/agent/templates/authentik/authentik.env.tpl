@@ -1,14 +1,16 @@
+{{- with secret "kv/data/authentik/users/bootstrap" -}}
+
+AUTHENTIK_BOOTSTRAP_PASSWORD={{ .Data.data.password }}
+
+{{- with index .Data.data "token" }}
+AUTHENTIK_BOOTSTRAP_TOKEN={{ index .Data.data "token" }}
+{{- end }}
+{{- end }}
 
 AUTHENTIK_SECRET_KEY={{ with secret "kv/data/authentik/core" }}{{ .Data.data.secret_key }}{{ end }}
 
 AUTHENTIK_PROXY=true
 
-{{- with secret "kv/data/authentik/users/bootstrap" -}}
-AUTHENTIK_BOOTSTRAP_PASSWORD={{ .Data.data.password }}
-{{- with index .Data.data "token" }}
-AUTHENTIK_BOOTSTRAP_TOKEN={{ index .Data.data "token" }}
-{{- end }}
-{{- end }}
 
 AUTHENTIK_LOG_LEVEL=info
 AUTHENTIK_ERROR_REPORTING_ENABLED=false
