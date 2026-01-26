@@ -345,7 +345,7 @@ services:
 
   # Authentik (authentication)
   authentik:
-    image: authentik/server:2025.10.3
+    image: authentik/server:2025.12.1
     container_name: authentik
     command: server
     depends_on:
@@ -378,7 +378,7 @@ services:
         max-file: "3"
 
   authentik-worker:
-    image: authentik/server:2025.10.3
+    image: authentik/server:2025.12.1
     command: worker
     container_name: authentik-worker
     env_file:
