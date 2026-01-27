@@ -13,11 +13,11 @@ AUTHENTIK_POSTGRESQL__PASSWORD=file:///authentik/secrets/pg_pass
 AUTHENTIK_POSTGRESQL__CONN_MAX_AGE=0
 AUTHENTIK_POSTGRESQL__CONN_HEALTH_CHECKS=true
 
-{{- with secret "kv/data/authentik/users/bootstrap" -}}
+{{ with secret "kv/data/authentik/users/bootstrap" }}
 
 AUTHENTIK_BOOTSTRAP_PASSWORD={{ .Data.data.password }}
 
-{{- with index .Data.data "token" }}
+{{ with index .Data.data "token" }}
 AUTHENTIK_BOOTSTRAP_TOKEN={{ index .Data.data "token" }}
-{{- end }}
-{{- end }}
+{{ end }}
+{{ end }}

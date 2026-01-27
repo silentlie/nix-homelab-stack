@@ -1,9 +1,9 @@
 user default off
 
-{{- with secret "kv/data/redis/users/redis" }}
+{{ with secret "kv/data/redis/users/redis" }}
 user {{ .Data.data.username }} on >{{ .Data.data.password }} {{ .Data.data.permissions }}
-{{- end }}
+{{ end }}
 
-{{- with secret "kv/data/redis/users/vault" }}
+{{ with secret "kv/data/redis/users/vault" }}
 user {{ .Data.data.username }} on >{{ .Data.data.password }} {{ .Data.data.permissions }}
-{{- end }}
+{{ end }}
