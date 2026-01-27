@@ -1,5 +1,5 @@
 {{- with secret "database/static-creds/vaultwarden" -}}
-DATABASE_URL=host=postgres port=5432 user={{ .Data.username }} password={{ .Data.password }} dbname=vaultwarden sslmode=disable
+DATABASE_URL=postgresql://{{ .Data.username }}:{{ .Data.password }}/vaultwarden?sslmode=disable
 {{- end }}
 
 {{- with secret "kv/data/vaultwarden/env" -}}
