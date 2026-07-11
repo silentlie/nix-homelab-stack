@@ -5,7 +5,7 @@
   environment.systemPackages = with pkgs; [
     go
     python3
-    python311Packages.pip
+    python3Packages.pip
     nodejs
     rustup
     zsh
