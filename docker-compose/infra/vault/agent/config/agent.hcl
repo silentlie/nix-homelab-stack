@@ -6,6 +6,12 @@ vault {
   address = "http://vault:8200"
 }
 
+# SECURITY DECISION (2026-10-29): intentional manual, one-time AppRole bootstrap.
+# See ../AUTHENTICATION.md before changing auto-auth, adding a bootstrap
+# service, or introducing reusable credentials. Unattended process restart is
+# explicitly NOT guaranteed: after consuming/deleting the SecretID file, a
+# new Agent process needs a freshly provisioned SecretID. Its persisted token
+# sink below is sensitive output, NOT an AppRole cold-start credential.
 auto_auth {
   method "approle" {
     mount_path = "auth/approle"
