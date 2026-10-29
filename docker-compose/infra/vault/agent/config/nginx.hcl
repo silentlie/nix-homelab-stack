@@ -98,3 +98,24 @@ template {
     max = "30s"
   }
 }
+
+# LAN access point HTTPS certificates.
+template {
+  source      = "/vault/agent/templates/nginx/asus-ap.tpl"
+  destination = "/vault/file/certs/.asus-ap.rendered"
+  error_on_missing_key = true
+  wait {
+    min = "5s"
+    max = "30s"
+  }
+}
+
+template {
+  source      = "/vault/agent/templates/nginx/tplink-ap.tpl"
+  destination = "/vault/file/certs/.tplink-ap.rendered"
+  error_on_missing_key = true
+  wait {
+    min = "5s"
+    max = "30s"
+  }
+}
