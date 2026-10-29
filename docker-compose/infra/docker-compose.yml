@@ -163,7 +163,12 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Vault Agent (per-host sidecar)
+  # Vault Agent (per-host sidecar).
+  # SECURITY / AVAILABILITY TRADE-OFF (2026-10-29):
+  # AppRole consumes/deletes its SecretID at startup. After recreating this
+  # container, authentication may require a NEW, manually delivered SecretID.
+  # Do not add a reusable SecretID or auto-bootstrap service just to avoid it.
+  # Rationale/runbook: ./vault/agent/AUTHENTICATION.md
   vault-agent:
     image: hashicorp/vault:latest
     container_name: vault-agent
