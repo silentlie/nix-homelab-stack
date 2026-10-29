@@ -1,5 +1,12 @@
 # Vault Agent Secrets Distribution — Design Rationale
 
+> **Separate accepted authentication decision:** [AUTHENTICATION.md](AUTHENTICATION.md)
+> records why Vault Agent deliberately uses a consumed AppRole SecretID and
+> **manual re-bootstrap on cold start**, rather than a reusable SecretID or
+> separate bootstrap service. This document addresses *rendered-file access*
+> and its reliability trade-offs; it does not supersede that authentication
+> decision.
+
 ## Summary
 
 This setup **intentionally prioritizes operational stability and predictability** over fine-grained, per-container filesystem isolation.
