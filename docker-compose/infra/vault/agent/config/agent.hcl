@@ -6,19 +6,16 @@ vault {
   address = "http://vault:8200"
 }
 
-# SECURITY DECISION (2026-10-29): intentional manual, one-time AppRole bootstrap.
-# See ../AUTHENTICATION.md before changing auto-auth, adding a bootstrap
-# service, or introducing reusable credentials. Unattended process restart is
-# explicitly NOT guaranteed: after consuming/deleting the SecretID file, a
-# new Agent process needs a freshly provisioned SecretID. Its persisted token
-# sink below is sensitive output, NOT an AppRole cold-start credential.
+# SECURITY DECISION (2026-11-16): RoleID-only AppRole authentication.
+# The primary Vault role enforces both login-source and token-use CIDRs at
+# 172.20.0.3/32. Docker Compose pins this Agent to that address on the
+# dedicated internal "agent" bridge. Network membership is privileged.
+# See ../AUTHENTICATION.md before changing either side of this boundary.
 auto_auth {
   method "approle" {
     mount_path = "auth/approle"
     config = {
-      role_id_file_path   = "/vault/file/approle/role_id"
-      secret_id_file_path = "/vault/file/approle/secret_id"
-      remove_secret_id_file_after_reading = true
+      role_id_file_path = "/vault/file/approle/role_id"
     }
   }
 
