@@ -132,10 +132,11 @@ services:
     # ports:
     #   - "127.0.0.1:8200:8200"
     networks:
-      - homelab
-      - transit
-      - agent
-      - db
+      homelab: {}
+      transit: {}
+      agent:
+        ipv4_address: 172.20.0.2
+      db: {}
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -164,11 +165,9 @@ services:
         max-file: "3"
 
   # Vault Agent (per-host sidecar).
-  # SECURITY / AVAILABILITY TRADE-OFF (2026-10-29):
-  # AppRole consumes/deletes its SecretID at startup. After recreating this
-  # container, authentication may require a NEW, manually delivered SecretID.
-  # Do not add a reusable SecretID or auto-bootstrap service just to avoid it.
-  # Rationale/runbook: ./vault/agent/AUTHENTICATION.md
+  # AppRole uses RoleID-only authentication, constrained to this container's
+  # static IP on the dedicated internal agent bridge. Network membership is
+  # part of the authentication trust boundary; see AUTHENTICATION.md.
   vault-agent:
     image: hashicorp/vault:latest
     container_name: vault-agent
@@ -189,7 +188,8 @@ services:
       - ./vault/agent/file:/vault/file
       # - redis_secrets:/vault/file/redis
     networks:
-      - agent
+      agent:
+        ipv4_address: 172.20.0.3
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -453,6 +453,11 @@ networks:
     external: true
   agent:
     driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
   db:
     driver: bridge
     internal: true
