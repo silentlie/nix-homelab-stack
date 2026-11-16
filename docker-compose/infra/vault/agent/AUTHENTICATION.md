@@ -131,7 +131,20 @@ docker compose logs --tail=100 vault-agent
 
 The Agent should authenticate without a SecretID file, write a new token to `/vault/file/token`, and render its configured templates. Its existing health check should become healthy when the PostgreSQL template is present.
 
-Tokens issued before the `token_bound_cidrs` change do not retroactively gain that restriction. After confirming the new RoleID-only login works, revoke the old Agent token and let the Agent authenticate again so its token sink contains a token carrying the new CIDR restriction. Treat the token sink as sensitive; do not print or paste its value.
+Tokens issued before the `token_bound_cidrs` change do not retroactively gain that restriction. If immediate revocation is required, capture the old token's accessor before recreating the Agent (this does not print the token):
+
+```sh
+docker exec vault-agent sh -c \
+  'VAULT_ADDR=http://vault:8200 VAULT_TOKEN="$(cat /vault/file/token)" vault token lookup -field=accessor'
+```
+
+After the new Agent has authenticated, revoke that old accessor using the primary Vault administrative token:
+
+```sh
+vault write auth/token/revoke-accessor accessor="<OLD_AGENT_TOKEN_ACCESSOR>"
+```
+
+If the Agent token does not have permission for `lookup-self`, leave the old token to expire according to its issued TTL or revoke it through an administrator using a securely supplied token value. Treat the token sink as sensitive; never print or paste its token value.
 
 ## Recovery and maintenance
 
